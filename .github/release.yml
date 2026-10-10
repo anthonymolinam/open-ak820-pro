@@ -1,0 +1,41 @@
+changelog:
+  categories:
+    - title: "✨ Features & Enhancements"
+      labels:
+        - "enhancement"
+        - "feature"
+      title_prefixes:
+        - "feat:"
+        - "feat("
+
+    - title: "🐛 Bug Fixes"
+      labels:
+        - "fix"
+        - "bug"
+      title_prefixes:
+        - "fix:"
+        - "fix("
+
+    - title: "🛠 Maintenance & CI"
+      labels:
+        - "chore"
+        - "ci"
+      title_prefixes:
+        - "ci:"
+        - "chore:"
+        - "refactor:"
+
+    - title: "Other Changes"
+      labels:
+        - "*"
+
+template: |
+  ## What's Changed in $NEXT_PATCH_VERSION
+
+  $CHANGES
+
+  ### Downloads
+  - **Windows:** Download `open-ak820-pro.exe` and launch it directly.
+  - **Linux:** Download `open-ak820-pro-linux`, make it executable with `chmod +x open-ak820-pro-linux`, and run it. If you prefer manual setup, download `99-ajazz.rules` and place it in `/etc/udev/rules.d/`.
+
+  **Full Changelog**: $CHANGELOG_DIFF
