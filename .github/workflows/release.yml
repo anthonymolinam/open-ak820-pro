@@ -1,0 +1,66 @@
+name: Build and Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libhidapi-dev libhidapi-hidraw0
+          pip install -r requirements.txt pyinstaller
+          pyinstaller --noconsole --onefile --name "open-ak820-pro-linux" app.py
+      - name: Upload Linux artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: open-ak820-pro-linux
+          path: dist/open-ak820-pro-linux
+
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt pyinstaller
+          pyinstaller --noconsole --onefile --name "open-ak820-pro.exe" app.py
+      - name: Upload Windows artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: open-ak820-pro.exe
+          path: dist/open-ak820-pro.exe
+
+  release:
+    needs: [build-linux, build-windows]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: open-ak820-pro-linux
+          path: release-files
+      - uses: actions/download-artifact@v4
+        with:
+          name: open-ak820-pro.exe
+          path: release-files
+      - name: Publish Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            release-files/open-ak820-pro-linux
+            release-files/open-ak820-pro.exe
+            99-ajazz.rules
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
