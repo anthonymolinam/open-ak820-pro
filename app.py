@@ -5,6 +5,8 @@ import glob
 import time
 import datetime
 import struct
+import shutil
+import subprocess
 import hid
 from PIL import Image, ImageSequence
 
@@ -23,6 +25,55 @@ SCREEN_WIDTH = 128
 SCREEN_HEIGHT = 128
 BLOCK_SIZE = 4096
 HEADER_PIXEL_OFFSET = 0x0100
+
+UDEV_RULE_CONTENT = """# Ajazz AK820 Pro (VID: 0x0c45, PID: 0x8009)
+SUBSYSTEM=="usb", ATTR{idVendor}=="0c45", ATTR{idProduct}=="8009", MODE="0666"
+KERNEL=="hidraw*", ATTRS{idVendor}=="0c45", ATTRS{idProduct}=="8009", MODE="0666"
+"""
+
+
+def prompt_install_udev_rules(parent_widget=None):
+    """Ofrece instalar la regla udev mediante elevación gráfica con pkexec si ocurre un error de permisos en Linux."""
+    if not sys.platform.startswith("linux"):
+        return False
+
+    reply = QMessageBox.question(
+        parent_widget,
+        "Permisos requeridos en Linux",
+        "Tu usuario no tiene permisos suficientes para comunicarse con el teclado USB.\n\n"
+        "¿Deseas configurar los permisos udev automáticamente ahora?\n"
+        "(El sistema te pedirá tu contraseña de administrador).",
+        QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
+    )
+
+    if reply != QMessageBox.StandardButton.Yes:
+        return False
+
+    if shutil.which("pkexec"):
+        script = (
+            f"echo '{UDEV_RULE_CONTENT}' > /etc/udev/rules.d/99-ajazz.rules && "
+            "udevadm control --reload-rules && udevadm trigger"
+        )
+        res = subprocess.run(["pkexec", "bash", "-c", script], capture_output=True)
+        if res.returncode == 0:
+            QMessageBox.information(
+                parent_widget,
+                "Permisos configurados",
+                "Regla udev instalada exitosamente.\n\n"
+                "Por favor, desconecta y vuelve a conectar el cable USB del teclado "
+                "para que el sistema aplique los cambios."
+            )
+            return True
+
+    QMessageBox.warning(
+        parent_widget,
+        "Instalación manual requerida",
+        "No se pudo completar la elevación con pkexec.\n\n"
+        "Por favor ejecuta manualmente en tu terminal:\n"
+        "sudo cp 99-ajazz.rules /etc/udev/rules.d/ && sudo udevadm trigger\n"
+        "y reconecta el teclado."
+    )
+    return False
 
 
 class AK820Driver:
@@ -136,7 +187,7 @@ class GifUploadWorker(QThread):
             data = AK820Driver.get_device(2)
 
             if not ctrl or not data:
-                self.finished.emit(False, "No se pudieron abrir las interfaces USB (2 y 3).")
+                self.finished.emit(False, "open failed: no se pudieron abrir las interfaces USB (2 y 3).")
                 return
 
             frames = []
@@ -402,8 +453,12 @@ class MainWindow(QMainWindow):
             st = "ACK Recibido" if res["status_ack"] else "Enviado"
             self.log(f"Reloj sincronizado a: {res['timestamp']} ({st})")
         except Exception as e:
-            self.log(f"Error: {e}")
-            QMessageBox.critical(self, "Error", str(e))
+            err_msg = str(e)
+            self.log(f"Error: {err_msg}")
+            if "open failed" in err_msg.lower():
+                prompt_install_udev_rules(self)
+            else:
+                QMessageBox.critical(self, "Error", err_msg)
 
     def pick_file(self):
         fn, _ = QFileDialog.getOpenFileName(
@@ -453,7 +508,10 @@ class MainWindow(QMainWindow):
         else:
             self.lbl_progress_text.setText("Error durante la transferencia")
             self.log(f"[-] Error: {msg}")
-            QMessageBox.critical(self, "Error", msg)
+            if "open failed" in msg.lower():
+                prompt_install_udev_rules(self)
+            else:
+                QMessageBox.critical(self, "Error", msg)
 
     def init_system_tray(self):
         self.tray = QSystemTrayIcon(self)
