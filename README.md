@@ -1,8 +1,8 @@
-# Ajazz AK820 Pro - Screen Controller & Time Sync
+# Open AK820 Pro - Screen Controller & Time Sync
 
-Controlador multiplataforma (Linux / Windows) para la pantalla TFT del teclado mecánico **Ajazz AK820 Pro** (VID: `0x0C45`, PID: `0x8009`), desarrollado mediante ingeniería inversa USB HID.
+A lightweight, cross-platform (Linux / Windows) controller for the TFT screen of the **Ajazz AK820 Pro** mechanical keyboard (VID: `0x0C45`, PID: `0x8009`), built entirely via USB HID reverse engineering.
 
-Permite sincronizar fecha/hora y subir animaciones GIF fluidas sin depender del software oficial de Windows.
+It allows you to sync date/time and upload smooth GIF animations natively without depending on the official proprietary Windows software.
 
 ![Python](https://img.shields.io/badge/Python-3.10%2B-blue)
 ![Platform](https://img.shields.io/badge/Platform-Linux%20%7C%20Windows-brightgreen)
@@ -10,24 +10,35 @@ Permite sincronizar fecha/hora y subir animaciones GIF fluidas sin depender del 
 
 ---
 
-## Características
+## Features
 
-* **Sincronización de fecha y hora:** Soporte nativo para formatos 24h y 12h (AM/PM).
-* **Carga de animaciones GIF:**
-  * Soporta archivos `.gif` directos o carpetas con secuencias de imágenes (`.png`, `.jpg`, `.bmp`).
-  * Tasa de refresco fluida (lectura de la tabla de delays por hardware sin bloqueo a 2 FPS).
-  * Alineación exacta a 256 bytes (sin desfases ni desbordes horizontales).
-  * Conversión automática de color RGB565 Little-Endian.
-* **Bandeja del sistema (Tray Icon):** Minimización en segundo plano con acceso rápido.
+- **Date & Time Synchronization:** Native support for both 24-hour military and 12-hour (AM/PM) display formats.
+- **Custom Animation & Image Upload:**
+  - Direct support for `.gif` files or folders containing image frame sequences (`.png`, `.jpg`, `.jpeg`, `.bmp`).
+  - Native framerate playback using hardware-level delay tables (bypassing the default 2 FPS lock).
+  - Exact 256-byte header alignment (eliminates horizontal frame skew and artifacts).
+  - Automatic RGB565 Little-Endian color conversion and downscaling to 128x128.
+- **System Tray Integration:** Runs quietly in the background with quick sync and access actions.
+- **Linux Automated Permissions:** Built-in automatic detection for USB access errors (`open failed`) with one-click graphical `udev` rule installation via `pkexec`.
 
 ---
 
-## Instalación en Linux
+## 🚀 Upcoming Features (Soon)
 
-### 1. Configurar permisos udev (Sin root)
-Para comunicarse con las interfaces HID sin necesidad de `sudo`:
+- [ ] **System Startup (Autostart):** Option to run minimized on system boot for automatic background timekeeping.
+- [ ] **Custom Profile Storage:** Quick presets to toggle between favorite GIFs without re-selecting files.
+- [ ] **RGB Backlight Customization:** Reverse-engineering USB HID payloads for onboard LED modes, colors, and brightness.
+- [ ] **AppImage & AUR Packaging:** Standalone distributions and package manager recipes for Linux.
+---
 
-```bash
-sudo cp 99-ajazz.rules /etc/udev/rules.d/
-sudo udevadm control --reload-rules
-sudo udevadm trigger
+## Installation & Setup
+
+### Option A: Pre-compiled Binaries (Recommended)
+
+Download the latest standalone executable directly from the [Releases](https://github.com/anthonymolinam/open-ak820-pro/releases) section:
+
+- **Windows:** Download `open-ak820-pro.exe` and launch it directly.
+- **Linux:** Download `open-ak820-pro-linux`, grant execution permissions, and run it:
+  ```bash
+  chmod +x open-ak820-pro-linux
+  ./open-ak820-pro-linux
